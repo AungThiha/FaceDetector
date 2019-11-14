@@ -13,13 +13,8 @@ import androidx.core.app.ActivityCompat
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseApp
 import com.google.firebase.ml.vision.FirebaseVision
-import com.google.firebase.ml.vision.cloud.FirebaseVisionCloudDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
-import com.google.firebase.ml.vision.face.FirebaseVisionFaceContour
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
-import com.google.firebase.ml.vision.face.FirebaseVisionFaceLandmark
-import com.google.firebase.ml.vision.label.FirebaseVisionOnDeviceAutoMLImageLabelerOptions
-import com.google.firebase.ml.vision.label.FirebaseVisionOnDeviceImageLabelerOptions
 import com.mindorks.paracamera.Camera
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -123,7 +118,7 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = camera.cameraBitmap
                 if (bitmap != null) {
                     imageView.setImageBitmap(bitmap)
-                    detectDeliciousFoodOnDevice(bitmap)
+                    detectSmile(bitmap)
                 } else {
                     Toast.makeText(this.applicationContext, getString(R.string.picture_not_taken),
                         Toast.LENGTH_SHORT).show()
@@ -133,27 +128,19 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun displayResultMessage(hasDeliciousFood: Boolean) {
+    private fun displayResultMessage(isSmiling: Boolean) {
         responseCardView.visibility = View.VISIBLE
 
-        if (hasDeliciousFood) {
+        if (isSmiling) {
             responseCardView.setCardBackgroundColor(Color.GREEN)
-            responseTextView.text = getString(R.string.face_found)
+            responseTextView.text = getString(R.string.smiling)
         } else {
             responseCardView.setCardBackgroundColor(Color.RED)
-            responseTextView.text = getString(R.string.no_face_found)
+            responseTextView.text = getString(R.string.not_smiling)
         }
     }
 
-    private fun hasDeliciousFood(items: List<String>): Boolean {
-        for (result in items) {
-            if (result.contains("Food", true))
-                return true
-        }
-        return false
-    }
-
-    private fun detectDeliciousFoodOnDevice(bitmap: Bitmap) {
+    private fun detectSmile(bitmap: Bitmap) {
         progressBar.visibility = View.VISIBLE
         val image = FirebaseVisionImage.fromBitmap(bitmap)
 
@@ -172,9 +159,16 @@ class MainActivity : AppCompatActivity() {
 
                 faces.firstOrNull()?.also { face ->
 
-                    displayResultMessage(true)
+                    // Classification
+                    val smilingProbability = face.smilingProbability
+                    val isSmiling = smilingProbability > 50
+                    displayResultMessage(isSmiling)
 
-                    // Landmarks
+
+                    /*val leftEyeOpenProbability = face.leftEyeOpenProbability
+                    val rightEyeOpenProbability = face.rightEyeOpenProbability*/
+
+                    /*// Landmarks
                     val leftEye = face.getLandmark(FirebaseVisionFaceLandmark.LEFT_EYE)
                     val rightEye = face.getLandmark(FirebaseVisionFaceLandmark.RIGHT_EYE)
                     val nose = face.getLandmark(FirebaseVisionFaceLandmark.NOSE_BASE)
@@ -183,11 +177,6 @@ class MainActivity : AppCompatActivity() {
                     val leftMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_LEFT)
                     val bottomMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_BOTTOM)
                     val rightMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_RIGHT)
-
-                    // Classification
-                    val smilingProbability = face.smilingProbability
-                    val leftEyeOpenProbability = face.leftEyeOpenProbability
-                    val rightEyeOpenProbability = face.rightEyeOpenProbability
 
                     // Contours
                     val faceContours = face.getContour(FirebaseVisionFaceContour.FACE).points
@@ -202,7 +191,7 @@ class MainActivity : AppCompatActivity() {
                     val lowerLipTopContours = face.getContour(FirebaseVisionFaceContour.LOWER_LIP_TOP).points
                     val lowerLipBottomContours = face.getContour(FirebaseVisionFaceContour.LOWER_LIP_BOTTOM).points
                     val noseBridgeContours = face.getContour(FirebaseVisionFaceContour.NOSE_BRIDGE).points
-                    val noseBottomContours = face.getContour(FirebaseVisionFaceContour.NOSE_BOTTOM).points
+                    val noseBottomContours = face.getContour(FirebaseVisionFaceContour.NOSE_BOTTOM).points*/
                 } ?: kotlin.run {
                     displayResultMessage(false)
                 }

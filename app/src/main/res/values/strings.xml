@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Face Detector</string>
-    <string name="face_found">Face Found</string>
-    <string name="no_face_found">No Face Found</string>
+    <string name="smiling">Smiling</string>
+    <string name="not_smiling">Not Smiling</string>
     <string name="error_taking_picture">Error taking picture</string>
     <string name="picture_not_taken">Picture Not Taken!</string>
     <string name="take_picture">TAKE PICTURE</string>
