@@ -5,15 +5,16 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseApp
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.google.firebase.ml.vision.face.FirebaseVisionFace
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
 import com.mindorks.paracamera.Camera
 import kotlinx.android.synthetic.main.activity_main.*
@@ -118,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = camera.cameraBitmap
                 if (bitmap != null) {
                     imageView.setImageBitmap(bitmap)
-                    detectSmile(bitmap)
+                    runFaceContourDetection(bitmap)
                 } else {
                     Toast.makeText(this.applicationContext, getString(R.string.picture_not_taken),
                         Toast.LENGTH_SHORT).show()
@@ -140,13 +141,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun detectSmile(bitmap: Bitmap) {
+    private fun runFaceContourDetection(bitmap: Bitmap) {
         progressBar.visibility = View.VISIBLE
         val image = FirebaseVisionImage.fromBitmap(bitmap)
 
         val options = FirebaseVisionFaceDetectorOptions.Builder()
-            .setPerformanceMode(FirebaseVisionFaceDetectorOptions.ACCURATE)
-            .setLandmarkMode(FirebaseVisionFaceDetectorOptions.ALL_LANDMARKS)
+            .setPerformanceMode(FirebaseVisionFaceDetectorOptions.ACCURATE) // or FirebaseVisionFaceDetectorOptions.FAST
+//            .setLandmarkMode(FirebaseVisionFaceDetectorOptions.ALL_LANDMARKS)
             .setContourMode(FirebaseVisionFaceDetectorOptions.ALL_CONTOURS)
             .build()
 
@@ -157,13 +158,47 @@ class MainActivity : AppCompatActivity() {
 
                 progressBar.visibility = View.GONE
 
-                faces.firstOrNull()?.also { face ->
+                processFaceContourDetectionResult(faces)
+
+            }
+            .addOnFailureListener { error ->
+                progressBar.visibility = View.INVISIBLE
+                Toast.makeText(this.applicationContext, getString(R.string.error),
+                    Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun processFaceContourDetectionResult(faces: List<FirebaseVisionFace>) { // Task completed successfully
+        if (faces.isEmpty()) {
+            Toast.makeText(this.applicationContext, getString(R.string.no_face_found),
+                Toast.LENGTH_SHORT).show()
+        } else {
+            graphicOverlay.clear()
+            for (i in faces.indices) {
+                val face = faces[i]
+                val faceGraphic = FaceContourGraphic(graphicOverlay)
+                graphicOverlay.add(faceGraphic)
+                faceGraphic.updateFace(face)
+            }
+        }
+    }
+
+
+    /*
+    faces.firstOrNull()?.also { face ->
 
                     // Classification
                     val smilingProbability = face.smilingProbability
                     val isSmiling = smilingProbability > 50
                     displayResultMessage(isSmiling)
 
+
+                    val leftMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_LEFT)
+                    val bottomMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_BOTTOM)
+                    val rightMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_RIGHT)
+
+
+                    val lowerLipBottomContours = face.getContour(FirebaseVisionFaceContour.LOWER_LIP_BOTTOM).points
 
                     /*val leftEyeOpenProbability = face.leftEyeOpenProbability
                     val rightEyeOpenProbability = face.rightEyeOpenProbability*/
@@ -174,9 +209,7 @@ class MainActivity : AppCompatActivity() {
                     val nose = face.getLandmark(FirebaseVisionFaceLandmark.NOSE_BASE)
                     val leftEar = face.getLandmark(FirebaseVisionFaceLandmark.LEFT_EAR)
                     val rightEar = face.getLandmark(FirebaseVisionFaceLandmark.RIGHT_EAR)
-                    val leftMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_LEFT)
-                    val bottomMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_BOTTOM)
-                    val rightMouth = face.getLandmark(FirebaseVisionFaceLandmark.MOUTH_RIGHT)
+
 
                     // Contours
                     val faceContours = face.getContour(FirebaseVisionFaceContour.FACE).points
@@ -192,16 +225,7 @@ class MainActivity : AppCompatActivity() {
                     val lowerLipBottomContours = face.getContour(FirebaseVisionFaceContour.LOWER_LIP_BOTTOM).points
                     val noseBridgeContours = face.getContour(FirebaseVisionFaceContour.NOSE_BRIDGE).points
                     val noseBottomContours = face.getContour(FirebaseVisionFaceContour.NOSE_BOTTOM).points*/
-                } ?: kotlin.run {
-                    displayResultMessage(false)
                 }
-
-            }
-            .addOnFailureListener { error ->
-                progressBar.visibility = View.INVISIBLE
-                Toast.makeText(this.applicationContext, getString(R.string.error),
-                    Toast.LENGTH_SHORT).show()
-            }
-    }
+    * */
 
 }
