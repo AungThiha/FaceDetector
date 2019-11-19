@@ -52,3 +52,5 @@ dependencies {
     // Para Camera
     implementation 'com.mindorks:paracamera:0.2.2'
 }
+
+apply plugin: 'com.google.gms.google-services'
