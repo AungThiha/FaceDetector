@@ -14,7 +14,7 @@ import java.nio.ByteBuffer
  *
  * @param <T> The type of the detected feature.
  */
-abstract class VisionProcessorBase<T>(private val processingListener: ProcessingListener<T>) : VisionImageProcessor {
+abstract class VisionProcessorBase<T> : VisionImageProcessor {
 
     // To keep the latest images and its metadata.
     @GuardedBy("this")
@@ -33,38 +33,41 @@ abstract class VisionProcessorBase<T>(private val processingListener: Processing
     @Synchronized
     override fun process(
         data: ByteBuffer,
-        frameMetadata: FrameMetadata
+        frameMetadata: FrameMetadata,
+        graphicOverlay: GraphicOverlay
     ) {
         latestImage = data
         latestImageMetaData = frameMetadata
         if (processingImage == null && processingMetaData == null) {
-            processLatestImage()
+            processLatestImage(graphicOverlay)
         }
     }
 
     // Bitmap version
-    override fun process(bitmap: Bitmap) {
+    override fun process(bitmap: Bitmap, graphicOverlay: GraphicOverlay) {
         detectInVisionImage(
             null, /* bitmap */
             FirebaseVisionImage.fromBitmap(bitmap),
-            null
+            null,
+            graphicOverlay
         )
     }
 
     @Synchronized
-    private fun processLatestImage() {
+    private fun processLatestImage(graphicOverlay: GraphicOverlay) {
         processingImage = latestImage
         processingMetaData = latestImageMetaData
         latestImage = null
         latestImageMetaData = null
         if (processingImage != null && processingMetaData != null) {
-            processImage(processingImage!!, processingMetaData!!)
+            processImage(processingImage!!, processingMetaData!!, graphicOverlay)
         }
     }
 
     private fun processImage(
         data: ByteBuffer,
-        frameMetadata: FrameMetadata
+        frameMetadata: FrameMetadata,
+        graphicOverlay: GraphicOverlay
     ) {
         val metadata = FirebaseVisionImageMetadata.Builder()
             .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_NV21)
@@ -75,21 +78,25 @@ abstract class VisionProcessorBase<T>(private val processingListener: Processing
 
         val bitmap = BitmapUtils.getBitmap(data, frameMetadata)
         detectInVisionImage(
-            bitmap, FirebaseVisionImage.fromByteBuffer(data, metadata), frameMetadata
+            bitmap, FirebaseVisionImage.fromByteBuffer(data, metadata), frameMetadata,
+            graphicOverlay
         )
     }
 
     private fun detectInVisionImage(
         originalCameraImage: Bitmap?,
         image: FirebaseVisionImage,
-        metadata: FrameMetadata?
+        metadata: FrameMetadata?,
+        graphicOverlay: GraphicOverlay
     ) {
         detectInImage(image)
             .addOnSuccessListener { results ->
-                processingListener.onSuccess(
+                onSuccess(
                     originalCameraImage, results,
-                    metadata!!
+                    metadata!!,
+                    graphicOverlay
                 )
+                processLatestImage(graphicOverlay)
             }
             .addOnFailureListener { e -> onFailure(e) }
     }
@@ -98,19 +105,18 @@ abstract class VisionProcessorBase<T>(private val processingListener: Processing
 
     protected abstract fun detectInImage(image: FirebaseVisionImage): Task<T>
 
-    protected abstract fun onFailure(e: Exception)
+    /**
+     * Callback that executes with a successful detection result.
+     *
+     * @param originalCameraImage hold the original image from camera, used to draw the background
+     * image.
+     */
+    protected abstract fun onSuccess(
+        originalCameraImage: Bitmap?,
+        results: T,
+        frameMetadata: FrameMetadata,
+        graphicOverlay: GraphicOverlay
+    )
 
-    public interface ProcessingListener<T> {
-        /**
-         * Callback that executes with a successful detection result.
-         *
-         * @param originalCameraImage hold the original image from camera, used to draw the background
-         * image.
-         */
-        fun onSuccess(
-            originalCameraImage: Bitmap?,
-            results: T,
-            frameMetadata: FrameMetadata
-        )
-    }
+    protected abstract fun onFailure(e: Exception)
 }

@@ -12,6 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 package thiha.aung.facedetector;
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -36,6 +49,8 @@ public class CameraSourcePreview extends ViewGroup {
   private boolean surfaceAvailable;
   private CameraSource cameraSource;
 
+  private GraphicOverlay overlay;
+
   public CameraSourcePreview(Context context, AttributeSet attrs) {
     super(context, attrs);
     this.context = context;
@@ -47,7 +62,7 @@ public class CameraSourcePreview extends ViewGroup {
     addView(surfaceView);
   }
 
-  public void start(CameraSource cameraSource) throws IOException {
+  private void start(CameraSource cameraSource) throws IOException {
     if (cameraSource == null) {
       stop();
     }
@@ -58,6 +73,11 @@ public class CameraSourcePreview extends ViewGroup {
       startRequested = true;
       startIfReady();
     }
+  }
+
+  public void start(CameraSource cameraSource, GraphicOverlay overlay) throws IOException {
+    this.overlay = overlay;
+    start(cameraSource);
   }
 
   public void stop() {
@@ -86,8 +106,21 @@ public class CameraSourcePreview extends ViewGroup {
         cameraSource.start();
       }*/
       cameraSource.start();
-
       requestLayout();
+
+      if (overlay != null) {
+        Size size = cameraSource.getPreviewSize();
+        int min = Math.min(size.getWidth(), size.getHeight());
+        int max = Math.max(size.getWidth(), size.getHeight());
+        if (isPortraitMode()) {
+          // Swap width and height sizes when in portrait, since it will be rotated by
+          // 90 degrees
+          overlay.setCameraInfo(min, max, cameraSource.getCameraFacing());
+        } else {
+          overlay.setCameraInfo(max, min, cameraSource.getCameraFacing());
+        }
+        overlay.clear();
+      }
       startRequested = false;
     }
   }
@@ -169,3 +202,4 @@ public class CameraSourcePreview extends ViewGroup {
     return false;
   }
 }
+

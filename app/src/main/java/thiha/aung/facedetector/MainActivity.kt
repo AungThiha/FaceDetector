@@ -20,7 +20,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback, CompoundButton.OnCheckedChangeListener,
-    VisionProcessorBase.ProcessingListener<List<FirebaseVisionFace>> {
+    FaceContourDetectorProcessor.ProcessingListener<List<FirebaseVisionFace>> {
 
     private var cameraSource: CameraSource? = null
 
@@ -48,6 +48,10 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback, Co
 
         if (firePreview == null) {
             Log.d(TAG, "Preview is null")
+        }
+
+        if (fireFaceOverlay == null) {
+            Log.d(TAG, "graphicOverlay is null")
         }
 
         val facingSwitch = facingSwitch
@@ -85,7 +89,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback, Co
     private fun createCameraSource() {
         // If there's no existing cameraSource, create one.
         if (cameraSource == null) {
-            cameraSource = CameraSource(this)
+            cameraSource = CameraSource(this, fireFaceOverlay)
         }
         try {
             cameraSource?.setMachineLearningFrameProcessor(FaceContourDetectorProcessor(this))
@@ -105,7 +109,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback, Co
                 if (firePreview == null) {
                     Log.d(TAG, "resume: Preview is null")
                 }
-                firePreview?.start(cameraSource)
+                firePreview?.start(cameraSource, fireFaceOverlay)
             } catch (e: IOException) {
                 Log.e(TAG, "Unable to start camera source.", e)
                 cameraSource?.release()
@@ -167,10 +171,11 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback, Co
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    override fun onSuccess(
+    override fun onProcessed(
         originalCameraImage: Bitmap?,
         results: List<FirebaseVisionFace>,
-        frameMetadata: FrameMetadata
+        frameMetadata: FrameMetadata,
+        graphicOverlay: GraphicOverlay
     ) {
         text.text = getString(R.string.number_of_faces, results.size.toString())
     }
