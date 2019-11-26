@@ -1,12 +1,4 @@
 <resources>
     <string name="app_name">Face Detector</string>
-    <string name="smiling">Smiling</string>
-    <string name="not_smiling">Not Smiling</string>
-    <string name="no_face_found">No Face Found</string>
-    <string name="error_taking_picture">Error taking picture</string>
-    <string name="picture_not_taken">Picture Not Taken!</string>
-    <string name="take_picture">TAKE PICTURE</string>
-    <string name="permission_message">I need permission to take pictures :(</string>
-    <string name="OK">OK</string>
-    <string name="error">Error</string>
+    <string name="number_of_faces">Number of faces: %s</string>
 </resources>

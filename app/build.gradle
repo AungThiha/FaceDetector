@@ -9,7 +9,7 @@ android {
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "thiha.aung.facedetector"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -48,6 +48,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics:17.2.1'
     implementation 'com.google.firebase:firebase-ml-vision:24.0.1'
     implementation 'com.google.firebase:firebase-ml-vision-face-model:19.0.0'
+
+    implementation 'androidx.camera:camera-camera2:1.0.0-alpha04'
+    implementation 'androidx.camera:camera-core:1.0.0-alpha04'
 
     // Para Camera
     implementation 'com.mindorks:paracamera:0.2.2'
