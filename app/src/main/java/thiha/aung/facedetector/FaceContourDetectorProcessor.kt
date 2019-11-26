@@ -13,7 +13,7 @@ import java.io.IOException
 /**
  * Face Contour Demo.
  */
-class FaceContourDetectorProcessor(val processingListener: ProcessingListener<List<FirebaseVisionFace>>) : VisionProcessorBase<List<FirebaseVisionFace>>() {
+class FaceContourDetectorProcessor(private val processingListener: ProcessingListener<List<FirebaseVisionFace>>) : VisionProcessorBase<List<FirebaseVisionFace>>() {
 
     private val detector: FirebaseVisionFaceDetector
 
